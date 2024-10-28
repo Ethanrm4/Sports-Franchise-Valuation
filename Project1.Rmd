@@ -1,0 +1,215 @@
+---
+title: "Project 1"
+author: "Ethan Michaels"
+date: "January 31, 2024"
+output: pdf_document
+---
+#Loading in libraries
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+```
+
+#Opening the CSV file and Cleaning
+```{r}
+data <- read.csv('franchise values.csv')
+```
+
+```{r}
+format(data,big.mark=",",scientific=FALSE)
+```
+
+#Cleaning Data to remove any teams value that are above our price range
+```{r}
+data= data %>% filter(Value<4000000000)
+```
+
+```{r}
+summary(data)
+```
+
+```{r}
+cor(data[,c('Value','Revenue','Debt.Value','Income','Population')])
+```
+#Creating a new variable to classify teams and year in one varible to have an easier time cleaning up the data
+```{r}
+data$TeamYear <- paste(data$Team,data$Year)
+```
+
+#Sorting the data to show data by league by year  
+```{r}
+data_sorted <- data %>% arrange(desc(League),TeamYear,Year)
+```
+
+#Creating a variable for value to revenue ratio
+```{r}
+data_sorted$Value_Revenue = data_sorted$Value/ data_sorted$Revenue
+data_sorted$Revenue_Value = data_sorted$Revenue/ data_sorted$Value
+data_sorted$Debt = data_sorted$Value*data_sorted$Debt.Value
+```
+
+#Making all varaibles with big numbers to show numbers by millions
+```{r}
+data_sorted$Revenue <- data_sorted$Revenue/1000000
+data_sorted$Value <- data_sorted$Value/1000000
+data_sorted$Income <- data_sorted$Income/1000000
+data_sorted$Population <- data_sorted$Population/1000000
+data_sorted$Debt <- data_sorted$Debt/1000000
+data_sorted$Income_Revenue <- data_sorted$Income/data_sorted$Revenue
+
+```
+
+```{r}
+ggplot(data_sorted,aes(x=Value,y=Revenue)) +
+  geom_point(aes(color=factor(League)))
+```
+
+#Taking the mean value of the Revenue_Value Ratio for each League Each Year
+```{r}
+data_summarise <- group_by(data_sorted,League,Year)
+data_summarise <-summarise(data_summarise,avg=mean(Revenue_Value))
+```
+
+#Creating a barplot to show the difference between leagues in each years average Value to revenue ratio
+```{r}
+ggplot(data_summarise,aes(fill=data_summarise$League,y=data_summarise$avg,x=data_summarise$Year,xlab="Year"))+
+  geom_bar(position="dodge",stat="identity") +
+  labs(x="Year",y="Average Revenue to Revenue Ratio",fill="League")
+```
+
+#######################################################################################################################################################
+#After comparing the data between sports I am Taking out 2020 due to lack of information, and MLS data since there is only 1 year worth of data
+```{r}
+data_sorted <- data_sorted[!data_sorted$Year == 2020, ]
+data_sorted <- data_sorted[!data_sorted$League == 'MLS', ]
+data_sorted2 <- data_sorted[!data_sorted$Year == 2021,]
+```
+
+#SplittingDataframes by League
+```{r}
+nfl_data <- data_sorted[data_sorted$League=='NFL',]
+mlb_data <- data_sorted[data_sorted$League=='MLB',]
+nba_data <- data_sorted[data_sorted$League=='NBA',]
+nhl_data <- data_sorted[data_sorted$League=='NHL',]
+```
+
+```{r}
+nfl_data2 <- nfl_data
+na.omit(nfl_data2)
+nfl_data2 <- nfl_data2[!nfl_data2$Year == 2021, ]
+mlb_data2 <- mlb_data[!mlb_data$Year == 2021, ]
+nhl_data2 <- nhl_data[!nhl_data$Year == 2021, ]
+nba_data2 <- nba_data[!nba_data$Year == 2021, ]
+```
+
+```{r}
+ggplot(data_sorted,aes(x=Value,y=Revenue)) +
+  geom_point(aes(color=factor(League)))
+```
+
+```{r}
+ggplot(data_sorted,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point(aes(color=factor(League)))
+```
+
+```{r}
+ggplot(data_sorted,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point(aes(color=factor(League)))
+```
+
+
+```{r}
+ggplot(nfl_data2,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point()+
+  geom_text_repel(aes(label=Team),size=3,vjust=1)+
+  theme()
+```
+
+```{r}
+ggplot(mlb_data2,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point()+
+  geom_text_repel(aes(label=Team),size=3,vjust=1)+
+  theme()
+```
+
+```{r}
+ggplot(nhl_data2,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point()+
+  geom_text_repel(aes(label=Team),size=3,vjust=1)+
+  theme()
+```
+
+```{r}
+ggplot(nba_data2,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point()+
+  geom_text_repel(aes(label=Team),size=3,vjust=1)+
+  theme()
+```
+
+```{r}
+ggplot(data_sorted2,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point()+
+  geom_text_repel(aes(label=Team),size=3,vjust=1)+
+  theme()
+```
+
+```{r}
+data_sorted3 <- data_sorted2[data_sorted2$Revenue_Value>data_sorted2$Debt.Value, ]
+```
+
+```{r}
+data_sorted3 
+```
+
+```{r}
+data_sorted4 <- data_sorted2[data_sorted2$Value <1000, ]
+data_sorted4
+```
+
+```{r}
+ggplot(data_sorted4,aes(x=Revenue_Value,y=Debt.Value)) +
+  geom_point()+
+  geom_text_repel(aes(label=Team),size=3,vjust=1)+
+  theme()
+```
+
+#Checking the correlation of all our variables
+```{r}
+cor(data_sorted[,c('Value','Revenue','Debt.Value','Income','Population','Income','X..of.Seasons','Debt'
+                   )])
+```
+
+#Creating a basic linear model for all Leagues excluding any N/As
+#USE
+```{r}
+linear_fit <- lm(Value ~ Revenue+Income+Population+Debt, data=data_sorted2)
+summary(linear_fit)
+
+```
+
+#NFL Regression
+```{r}
+linear_fit_log <- lm(Value ~ Revenue + Income + Debt + Population, data=nfl_data2)
+summary(linear_fit_log)
+```
+
+#MLB_Data
+```{r}
+linear_fit_log <- lm(Value ~ Revenue + Income+ Debt + Population, data=mlb_data2)
+summary(linear_fit_log)
+```
+
+#NBA Data
+```{r}
+linear_fit_log <- lm(Value ~ Revenue + Income + Population, data=nba_data2)
+summary(linear_fit_log)
+```
+
+#NHL
+```{r}
+linear_fit_log <- lm(Value ~ Revenue + Income + Population, data=nhl_data2)
+summary(linear_fit_log)
+```
+
