@@ -1,9 +1,4 @@
----
-title: "Project 1"
-author: "Ethan Michaels"
-date: "January 31, 2024"
-output: pdf_document
----
+
 #Loading in libraries
 ```{r}
 library(tidyverse)
