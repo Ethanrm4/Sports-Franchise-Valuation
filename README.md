@@ -1,0 +1,1 @@
+In this project, I am advising an investment group contemplating a $4 billion investment in professional sports. By analyzing team valuations across major sports for 2020, 2021, and 2023, I factored in the value-to-revenue ratio and market size to deliver a data-driven recommendation on the optimal allocation of the $4 billion.
